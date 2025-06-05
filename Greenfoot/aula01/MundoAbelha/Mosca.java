@@ -14,8 +14,10 @@ public class Mosca extends Actor
      */
     public void act()
     {
-        // Add your action code here.
+    // Add your action code here.
         move(1);
-        turn(-1);
+        if (Greenfoot.getRandomNumber(100)<20){
+            turn(45-Greenfoot.getRandomNumber(90));
     }
+}
 }
