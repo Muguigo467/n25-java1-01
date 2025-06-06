@@ -12,6 +12,7 @@ public class Abelha extends Actor
      * Act - do whatever the Abelha wants to do. This method is called whenever
      * the 'Act' or 'Run' button gets pressed in the environment.
      */
+
     public void act()
     {
         // Add your action code here.
@@ -23,5 +24,51 @@ public class Abelha extends Actor
         if (Greenfoot.isKeyDown("right")){
             turn(5);
         }
+        verificarPosicao();
+    }
+    /**
+     * Método que verifica posição da Abelha.
+     */
+    public void verificarPosicao(){
+        if (estaNoTopo()){
+            setLocation(getX(), getWorld().getHeight()-10);
+        }
+        if (estaNaBase()){
+            setLocation(getX(), 10);
+        }
+        if (estaNaEsquerda()){
+            setLocation(getWorld().getWidth()-10, getY());
+        }
+        if (estaNaDireita()){
+            setLocation(10, getY());
+        }
+    }
+    /**
+     * Método que verifica se a abelha está no topo.
+     */
+    public boolean estaNoTopo(){
+        if (getY()<10){
+            return true;
+        } else{
+            return false;
+        }
+    }
+    /**
+     * Método que verifica se a abelha está na base.
+     */
+    public boolean estaNaBase() {
+        return getY()>getWorld().getHeight()-10;
+    }
+    /**
+     * Método que verifica se a abelha está na esquerda.
+     */
+    public boolean estaNaEsquerda() {
+        return getX()<10;
+    }
+    /**
+     * Método que verifica se a abelha está na direita.
+     */
+    public boolean estaNaDireita () {
+        return getX()>getWorld().getWidth()-10;
     }
 }
