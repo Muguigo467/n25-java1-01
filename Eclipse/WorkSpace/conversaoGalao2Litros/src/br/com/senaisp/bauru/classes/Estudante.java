@@ -1,0 +1,27 @@
+package br.com.senaisp.bauru.classes;
+
+public class Estudante {
+	private String nome;
+	private int ra;
+	private double nota;
+	private boolean ehFumante;
+	//Constructor
+	public Estudante() {
+		setNome("Sem Nome");
+		ra = 0;
+		nota = 0.0;
+		ehFumante = false;
+	}
+	public String getNome() {
+		return nome;
+	}
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
+	public int getRa() {
+		return ra;
+	}
+	public void setRa(int ra) {
+		this.ra = ra;
+	}
+}

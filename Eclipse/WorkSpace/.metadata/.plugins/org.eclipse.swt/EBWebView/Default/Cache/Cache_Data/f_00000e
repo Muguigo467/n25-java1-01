@@ -1,0 +1,2413 @@
+
+
+
+
+
+
+ 
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
+<!--
+ ! Copyright (c) 2000, 2018 IBM Corporation and others.
+ !
+ ! This program and the accompanying materials 
+ ! are made available under the terms of the Eclipse Public License 2.0
+ ! which accompanies this distribution, and is available at
+ ! https://www.eclipse.org/legal/epl-2.0/
+ !
+ ! SPDX-License-Identifier: EPL-2.0
+ ! 
+ ! Contributors:
+ !     IBM Corporation - initial API and implementation
+ -->
+
+
+
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="-1">
+
+<title>Search Results</title>
+
+<style type="text/css">
+/*******************************************************************************
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
+ *
+ * This program and the accompanying materials 
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ * 
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+
+body {
+    
+	color: WindowText;
+	font: icon;
+	font-size: .875rem;
+	padding: 0px;
+	border: 0px;
+	margin-top: 5px;
+	margin-bottom: 8px;
+	margin-left: 5px;
+	margin-right: 5px;
+	cursor: default;
+}
+
+table {
+	font: icon;
+	font-size: .875rem;
+	width: 100%;
+	table-layout: fixed;
+}
+
+a {
+	text-decoration:none; 
+	padding:0px;
+}
+
+a:hover {
+	text-decoration:underline; 
+}
+
+.category {
+	font-weight: bold;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.sectiontitle {
+	background-color: ButtonFace;
+	font-weight:bold;
+	margin-top:7px;
+}
+
+.results .active { 
+	background:Highlight;
+	color:HighlightText;
+	width:100%;
+	height:100%;
+}
+
+.showall {
+    text-decoration:underline; 
+    color:#0066FF; 
+	cursor:pointer;
+}
+
+#menu {
+	position:absolute;
+	display:none;
+	background:ButtonFace;
+	border:2px outset;
+	padding:2px 0px;
+}
+
+.selectedMenuItem {
+	background:Highlight;
+	color:HighlightText;
+	padding-left:10px;
+	padding-right:10px;
+}
+
+.unselectedMenuItem {
+	background:ButtonFace;
+	color:WindowText;
+	padding-left:10px;
+	padding-right:10px;
+}
+
+.icon {
+	width: 23px;
+	padding-left: 0px;
+}
+
+.description {
+	display: block;
+}
+.location {
+	display: block;
+	font-size:80%;
+	overflow:visible;
+	white-space:nowrap;
+}
+.location, .location a {
+	color:#006633;
+}
+.active .location, .active .location a {
+	color:HighlightText;
+}
+
+@media (prefers-color-scheme: dark) {
+	body { 
+		color: #f0f0f0; 
+		background: #3d3d3d;
+	}
+
+	#titleText,
+	#searchLabel,
+	#scopeLabel,
+	#scope,
+	a,
+	a.active
+	a.nolink:link, 
+	a.nolink:visited {
+		color:#ffffff;
+	}
+
+	.button a:hover, .buttonMenu a:hover { 
+		border-top:1px solid #3d3d3d; 
+		border-left:1px solid #3d3d3d; 
+		border-right:1px solid #3d3d3d; 
+		border-bottom:1px solid #3d3d3d;
+	}
+
+	table {
+		background:#3d3d3d;
+	}
+	.tab {
+		background:#7b7c7b
+	}
+
+	form {
+		background:#3d3d3d;
+	}
+	
+	.separator {
+
+	}
+	
+	input{
+		background:#a0a0a0;
+	}
+
+	.button a, .buttonMenu a { 
+		border:1px solid #3d3d3d;;
+	}
+	
+	/* darken images to add some comfort while reading in dark theme */
+	img {
+		opacity: .75;
+		transition: opacity .5s ease-in-out;
+	}
+	img:hover {
+		opacity: 1;
+	}
+
+	.location, .location a {
+		color:#00cc66;
+	}
+}
+
+</style>
+
+
+<base target="ContentViewFrame">
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="list.js"></script>
+<script type="text/javascript" src="view.js"></script>
+<script type="text/javascript">	
+
+var cookiesRequired = "This\u0020feature\u0020requires\u0020cookies\u0020to\u0020be\u0020enabled\u0020in\u0020your\u0020browser\u002E";	
+var showCategories = false;
+var scope ="All\u0020topics";
+
+function refresh() { 
+	window.location.replace("searchView.jsp?searchWord\u003Dchange\u0025\u0032\u0030theme\u0026maxHits\u003D\u0035\u0030\u0030");
+}
+
+function isShowLocations() {
+	var value = getCookie("showLocations");
+	return value ? value == "true" : true;
+}
+
+function isShowDescriptions() {
+	var value = getCookie("showDescriptions");
+	return value ? value == "true" : true;
+}
+
+function setShowCategories(value) { 	    
+	parent.searchToolbarFrame.setButtonState("show_categories", value);
+	var searchWord = "change\u0020theme";
+	    window.location="searchView.jsp?searchWord=" + encodeURIComponent(searchWord) 
+	       + "&showSearchCategories=" + value +
+	       "&scope=" + encodeURIComponent(scope);    
+}
+
+function setShowLocations(value) {
+	setCookie("showLocations", value);
+	var newValue = isShowLocations();
+	parent.searchToolbarFrame.setButtonState("show_locations", newValue);
+	if (value != newValue) {
+		alert(cookiesRequired);
+	} else {
+		setCSSRule(".location", "display", value ? "block" : "none");
+	}
+}
+
+function setShowDescriptions(value) {
+	setCookie("showDescriptions", value);
+	var newValue = isShowDescriptions();   	
+	parent.searchToolbarFrame.setButtonState("show_descriptions", newValue);
+	if (value != newValue) {
+	    alert(cookiesRequired);
+	} else { 
+	    setCSSRule(".description", "display", value ? "block" : "none");
+	}
+}
+
+function toggleShowCategories() {
+	setShowCategories(!showCategories);
+}
+
+function toggleShowLocations() {
+	setShowLocations(!isShowLocations());
+}
+
+function toggleShowDescriptions() {
+	setShowDescriptions(!isShowDescriptions());
+}
+
+function onShow() { 
+}
+</script>
+
+
+</head>
+
+<body dir="ltr">
+
+
+<p><b>62 matches in All topics&#58;</b>
+
+    &nbsp;<a class="showall" onclick="rescope();" >Change scope</a>
+
+</p>
+
+
+<table class="results" cellspacing='0'>
+
+
+
+<tr class='list' id='r0'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a0' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;eclemma&#46;doc&#47;pages&#47;changes&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EclEmma Java Code Coverage">
+
+
+
+        Change Log</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;eclemma&#46;doc&#47;pages&#47;introduction&#46;html">EclEmma Java Code Coverage</a> &#8250; </div></td></tr>
+<tr id='d0'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			EclEmma Change Log Version 3&#46;1&#46;9 &#40;2024&#47;05&#47;22&#41; Upgrade to JaCoCo 0&#46;8&#46;12 Version 3&#46;1&#46;8 &#40;2023&#47;12&#47;12&#41; Upgrade to JaCoCo 0&#46;8&#46;11 Version 3&#46;1&#46;7 &#40;2023&#47;06&#47;07&#41; Upgrade to JaCoCo 0&#46;8&#46;10 Version 3&#46;1&#46;6 &#40;2022&#47;06&#47;01
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r1'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a1' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;Contributor_Guide&#47;Gerrit&#45;Code&#45;Review&#45;Cheatsheet&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit Contributor Guide &#45; Gerrit Code Review Cheatsheet</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;Contributor_Guide&#47;Contributor&#45;Guide&#46;html">EGit Contributor Guide</a></div></td></tr>
+<tr id='d1'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Gerrit Code Review Cheatsheet Contributing Patches Updating This Document Gerrit Code Review Cheatsheet Install the commit&#45;msg hook in your repository scp &#45;p &#45;P 29418 username&#64;eclipse&#46;gerrithub&#46;io&#58;hoo
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r2'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a2' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;114&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Committing</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1h&#46;htm">Working in the Team Environment</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;115&#46;htm">Synchronizing With the Repository</a></div></td></tr>
+<tr id='d2'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			You can commit Workbench resources that you have modified to the repository so that other team members can see your work&#46; Only those changes committed on that branch will b&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r3'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a3' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;welcome_preferences&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Customize Welcome Dialog</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1&#46;htm">Customizing the Workbench</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;welcome&#46;htm">Customizing Welcome</a></div></td></tr>
+<tr id='d3'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The Customize Welcome dialog which is opened using the &#34;customize page&#34; button above the Welcome screen allows you to modify the welcome appearance and content&#46; You can sel&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r4'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a4' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;concepts&#47;concept&#45;refactoring&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Refactoring Support&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4">Reference</a></div></td></tr>
+<tr id='d4'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The goal of Java program refactoring is to make system&#45;wide code changes without affecting&#10;      the behavior of the program&#46; The Java tools provide assistance i
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r5'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a5' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;16&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Appearance</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;72&#46;htm">Preferences</a></div></td></tr>
+<tr id='d5'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			You can change the following preference on the &#91;command link&#93;General &#62; Appearance preferences page&#46; Option Description Default Enable Theming Specify whether theming of the&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r6'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a6' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;help&#46;ui&#47;Mylyn&#47;FAQ&#47;Team&#45;Support&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Mylyn Documentation">
+
+
+
+        Mylyn FAQ &#45; Team Support</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;6">Mylyn Documentation</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0">Tasks User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0_1">Frequently Asked Questions</a></div></td></tr>
+<tr id='d6'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Team Support Java Development WikiText Team Support My change set is missing or doesn’t contain elements it should&#46; Help&#33; If a task change set disappears or is missing items&#44; toggle the Incoming&#47;Outgo
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r7'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a7' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;views&#47;breakpoints&#47;ref&#45;breakpoints_view&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        Breakpoints View</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;views&#47;ref&#45;viewsandeditors&#46;htm">Views</a></div></td></tr>
+<tr id='d7'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			 Breakpoints View   The  Breakpoints View  lists all the breakpoints you currently have set in your workspace&#46;  You can double&#45;click a breakpoint to display its location in the editor &#40;if applicable&#41;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r8'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a8' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;timpandexp&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Importing and Exporting Preferences</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1&#46;htm">Customizing the Workbench</a></div></td></tr>
+<tr id='d8'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Preference files can be both imported to and exported from the Workbench allowing you to easily share individual or group preferences&#46; The Import wizard can be used to impo&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r9'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a9' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;help&#46;ui&#47;Mylyn&#47;FAQ&#47;Task&#45;List&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Mylyn Documentation">
+
+
+
+        Mylyn FAQ &#45; Task List</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;6">Mylyn Documentation</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0">Tasks User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0_1">Frequently Asked Questions</a></div></td></tr>
+<tr id='d9'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Task List Installation Task Editor Task List How do I restore my tasks from backup&#63; The task list can be restored from automated backup via the Task List view’s drop down view menu and selecting Resto
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r10'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a10' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;concepts&#47;concept&#45;java&#45;builder&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Java Builder&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_2">Concepts</a></div></td></tr>
+<tr id='d10'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The Java builder builds Java programs using its own compiler &#40;the Eclipse Compiler for Java&#41;&#10;      that implements the Java Language Specification&#46;&#160; The Java builder ca
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r11'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a11' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;10b&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Closing an Editor</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_1">Getting Started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;01&#46;htm">Basic Tutorial</a></div></td></tr>
+<tr id='d11'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Now that there are a couple of editors open&#44; here&#39;s how to close them&#46; Select the editor tab showing the first &#46;txt file&#46; In the text area add a 6th line of text&#58; This is a&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r12'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a12' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;whatsNew&#47;platform_whatsnew&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Eclipse Platform What&#39;s New in 4&#46;35</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; </div></td></tr>
+<tr id='d12'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Platform and Equinox Here are descriptions of some of the more interesting or significant changes made to the Eclipse Platform for the&#10;  4&#46;35 release of Eclipse&#46; They are grouped into&#58; Views&#44; Dialogs 
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r13'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a13' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;52&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Editing Files Outside the Workbench</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1b&#46;htm">Working With Views and Editors</a></div></td></tr>
+<tr id='d13'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			To edit a Workbench resource outside the Workbench&#58; Navigate in the file system to the Workbench&#39;s installation directory&#46; Go into the workspace directory and open the file&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r14'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a14' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;WorkingWithExistingLayout2&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Overlapping products in a common source tree&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_1">Getting started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;ProjectConfiguration&#46;htm">Project configuration tutorial</a></div></td></tr>
+<tr id='d14'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Layout on File System&#10;     The Java source files for products are all held in a single main&#10;      directory&#46; Products are separated into
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r15'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a15' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;20&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Changing Fonts and Colors</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1&#46;htm">Customizing the Workbench</a></div></td></tr>
+<tr id='d15'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			By default&#44; the Workbench uses the fonts and colors provided by the operating system&#46; However&#44; there are a number of ways that this behavior can be customized&#46; Fonts The Wo&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r16'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a16' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;OrganizingSources&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Organizing sources&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_1">Getting started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;ProjectConfiguration&#46;htm">Project configuration tutorial</a></div></td></tr>
+<tr id='d16'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Layout on File System&#10;     In this section&#44; you will create a new Java project and organize your&#10;      sources in separate folders&#46; This will prepare you for hand
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r17'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a17' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;concepts&#45;5&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Views</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_2">Concepts</a></div></td></tr>
+<tr id='d17'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			support editors and provide alternative presentations as well as ways to navigate the information in your Workbench&#46; For example&#44; the Project Explorer and other navigation &#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r18'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a18' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;94_run_pj&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Executing Project Builders</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_1">Getting Started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;80_ant&#46;htm">Ant &#38; External Tools Tutorial</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;92_project_builders&#46;htm">Ant Buildfiles as Project Builders</a></div></td></tr>
+<tr id='d18'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The whole point of project builders is that you don&#39;t need to explicitly tell them to run&#46; Instead&#44; they run automatically whenever a qualifying build takes place for the p&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r19'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a19' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;14b&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Linked Resources</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;72&#46;htm">Preferences</a></div></td></tr>
+<tr id='d19'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The &#91;command link&#93; General &#62; Workspace &#62; Linked Resources preference page is used when working with linked resources&#46; The preference Enable linked resources is used to glob&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r20'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a20' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;concepts&#45;6&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Editors and the Editor Area</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_2">Concepts</a></div></td></tr>
+<tr id='d20'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Most perspectives in the Workbench are comprised of an editor area and one or more views&#46; You can associate different editors with different types of files&#46; For example&#44; wh&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r21'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a21' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;concepts&#45;13&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Linked Resources</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_2">Concepts</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;concepts&#45;2&#46;htm">Workbench</a></div></td></tr>
+<tr id='d21'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Linked resources are files and folders that are stored in locations in the file system outside of the project&#39;s location&#46; These special resources can be used to add files a&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r22'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a22' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;25&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Compare Editor</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4_3">User interface information</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4_3_1">Views and Editors</a></div></td></tr>
+<tr id='d22'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			You can view the differences between two files by comparing them&#46; You can compare different files&#44; you can compare versions in the Workbench with versions in the repository&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r23'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a23' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tips&#47;platform_tips&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Platform Tips and Tricks</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; </div></td></tr>
+<tr id='d23'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The following tips and tricks give some helpful ideas for increasing your productivity&#46; They are divided into the following sections&#58; Workbench Editing Ant Help Version Con&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r24'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a24' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;Contributor_Guide&#47;Contributing&#45;Patches&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit Contributor Guide &#45; Contributing Patches</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;Contributor_Guide&#47;Contributor&#45;Guide&#46;html">EGit Contributor Guide</a></div></td></tr>
+<tr id='d24'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Contributing Patches Website Gerrit Code Review Cheatsheet Contributing Patches Using Gerrit EGit and JGit projects are using &#10;&#9;&#9;&#9; Gerrit Code Review  for Git based patch submission and review&#46; &#10;&#9;&#9; Bo
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r25'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a25' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;20&#45;fileContent&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        File Content</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;72&#46;htm">Preferences</a></div></td></tr>
+<tr id='d25'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			On the &#91;command link&#93; Team &#62; File Content preference page&#44; you can associate file names or extensions with the type of data the file contains&#46; The two choices for file cont&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r26'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a26' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;Concepts&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit User Guide &#45; Concepts</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit User Guide</a></div></td></tr>
+<tr id='d26'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Concepts EGit User Guide Tasks Concepts Git is built on a few simple and very powerful ideas&#46; Knowing them helps to understand more easily how git works&#46; Repository The Repository or Object Database s
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r27'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a27' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;anteditorprefs&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Ant Editor</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;72&#46;htm">Preferences</a></div></td></tr>
+<tr id='d27'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The following preferences can be changed on the &#91;command link&#93; Ant &#62; Editor preference page&#46; Appearance Options Option Description Default Mark occurrences of the selected &#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r28'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a28' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;help&#46;ui&#47;Mylyn&#47;FAQ&#47;Task&#45;Focused&#45;UI&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Mylyn Documentation">
+
+
+
+        Mylyn FAQ &#45; Task&#45;Focused UI</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;6">Mylyn Documentation</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0">Tasks User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0_1">Frequently Asked Questions</a></div></td></tr>
+<tr id='d28'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Task&#45;Focused UI Web Templates Connector Context and Timing data Task&#45;Focused UI What is the Task&#45;Focused UI&#63; When you activate a task&#44; Mylyn automatically maintains a task context by monitoring your i
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r29'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a29' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;securestorage&#45;prefs&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Secure Storage</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;72&#46;htm">Preferences</a></div></td></tr>
+<tr id='d29'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The &#91;command link&#93; General &#62; Security &#62; Secure Storage preference page is used to manage storage of encrypted information such as passwords&#46; Typically you will have no reas&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r30'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a30' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;epp&#46;mpc&#46;help&#46;ui&#47;EPP&#47;MPC&#47;User_Guide&#47;User&#45;Guide&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Marketplace User Guide">
+
+
+
+        Marketplace User Guide</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;epp&#46;mpc&#46;help&#46;ui&#47;EPP&#47;MPC&#47;User_Guide&#47;User&#45;Guide&#46;html">Eclipse Marketplace User Guide</a> &#8250; </div></td></tr>
+<tr id='d30'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Overview This guide provides information on the Eclipse Marketplace Client and how to use it&#46;  The Eclipse Marketplace Client provides a means to find and install solutions from the&#10;&#9;&#9;&#9; Eclipse Market
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r31'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a31' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;15&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        Evaluating snippets</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_1">Getting started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;BasicTutorial&#46;htm">Basic tutorial</a></div></td></tr>
+<tr id='d31'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			In this section&#44; you will evaluate Java expressions using the Java scrapbook&#46; Java scrapbook pages allow you to experiment with Java code fragments before putting them in y&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r32'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a32' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;93a_project_builder_targets&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Project Builder Ant Targets</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_1">Getting Started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;80_ant&#46;htm">Ant &#38; External Tools Tutorial</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;92_project_builders&#46;htm">Ant Buildfiles as Project Builders</a></div></td></tr>
+<tr id='d32'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			When creating a new project builder using an Ant build file&#44; one of the key pieces of information to set up and understand is the targets and when they will be executed&#46; Wh&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r33'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a33' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;83_edit&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Editing Ant Buildfiles</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_1">Getting Started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;80_ant&#46;htm">Ant &#38; External Tools Tutorial</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;81_basics&#46;htm">Eclipse Ant Basics</a></div></td></tr>
+<tr id='d33'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Because Ant buildfiles are simple text files&#44; any text editor can be used to edit them&#46; But there are several advantages to using the Eclipse Ant editor&#44; including syntax c&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r34'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a34' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;help_search&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Searching Help</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;help&#46;xhtml">Accessing Help</a></div></td></tr>
+<tr id='d34'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The help system includes a search engine that can run simple or complex queries on the documentation to help you find the information you are looking for&#46; To search help&#58; F&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r35'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a35' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;36b&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        The Search View</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_1">Getting Started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;01&#46;htm">Basic Tutorial</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;36&#46;htm">Searching</a></div></td></tr>
+<tr id='d35'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Now that the search has been completed&#44; the Search view is visible&#46; The title of the Search view shows that four matches were found&#46; Within the Search view two files are sh&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r36'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a36' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;125&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Updating Software Using the Available Updates Wizard</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a></div></td></tr>
+<tr id='d36'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The Available Updates wizard shows you what updates are available for your software&#46; This wizard is shown if you click the automatic updates notification popup&#44; or if you c&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r37'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a37' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;23&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Workbench Window Layout</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4_3">User interface information</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4_3_1">Views and Editors</a></div></td></tr>
+<tr id='d37'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			You can rearrange the layout of Workbench windows as follows&#58; Drag views to different positions within the Workbench window&#46; Drag editors such that they are simultaneously visi
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r38'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a38' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;wikitext&#46;help&#46;ui&#47;help&#47;Task&#45;Editor&#45;Integration&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Mylyn Documentation">
+
+
+
+        Mylyn&#45;WikiText&#45;User&#45;Guide &#45; Task Editor Integration</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;6">Mylyn Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;wikitext&#46;help&#46;ui&#47;help&#47;Mylyn&#45;WikiText&#45;User&#45;Guide&#46;html">WikiText User Guide</a></div></td></tr>
+<tr id='d38'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Task Editor Integration Getting Started Markup Generation Task Editor Integration WikiText extends Mylyn to provide a markup&#45;aware task editor&#46;  With WikiText installed&#44; Mylyn can render wiki markup a
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r39'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a39' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;WorkingWithExistingLayout6&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Project using a source framework with restricted access&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_1">Getting started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;ProjectConfiguration&#46;htm">Project configuration tutorial</a></div></td></tr>
+<tr id='d39'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Layout on File System&#10;     The Java source files for a product requires a source framework&#46;&#10;       &#34;Product&#34; and &#34;Framework&#34;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r40'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a40' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;eclemma&#46;doc&#47;pages&#47;faq&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EclEmma Java Code Coverage">
+
+
+
+        FAQ</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;eclemma&#46;doc&#47;pages&#47;introduction&#46;html">EclEmma Java Code Coverage</a> &#8250; </div></td></tr>
+<tr id='d40'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Frequently Asked Questions Usage How can I remove the coverage coloring from the Java editors again&#63; How can I run &#123;whateverapplication&#125; with EclEmma&#63; Does EclEmma support automated Ant or Maven build
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r41'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a41' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;9n&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Showing and Hiding Menu Items and Toolbar Buttons</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1a&#46;htm">Working With Perspectives</a></div></td></tr>
+<tr id='d41'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			You can choose to hide menu items and toolbar buttons and then show them again&#46; Hiding a Menu Item or Toolbar Button To hide a menu item or toolbar button&#58; Switch to the pe&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r42'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a42' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;preferences&#47;run&#45;debug&#47;ref&#45;console&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Console Preferences&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4_4">Preferences</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;preferences&#47;run&#45;debug&#47;ref&#45;run_debug&#46;htm">Run&#47;Debug</a></div></td></tr>
+<tr id='d42'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The following preferences can be set using the  Run&#47;Debug  &#62;  Console &#10;&#10;      preference page&#46;&#10;     &#10;      The console displays output from running applications&#44;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r43'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a43' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;tasks&#47;task&#45;memory&#45;monitors&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        Working with memory monitors</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;tasks&#47;task&#45;running_and_debugging&#46;htm">Running and Debugging</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;tasks&#47;task&#45;memory&#45;inspect&#46;htm">Inspecting memory in the Memory view</a></div></td></tr>
+<tr id='d43'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			To view the contents of memory from the Memory view&#58; In the Monitors pane&#44; select the memory monitor that contains the memory location that you want to view&#46; Memory will ap&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r44'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a44' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;Tasks&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit User Guide &#45; Tasks</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit User Guide</a></div></td></tr>
+<tr id='d44'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Tasks Concepts Reference Tasks Creating Repositories Considerations for Git Repositories to be used in Eclipse The short story When setting up Git Repositories with EGit&#44; there are two recommendations
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r45'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a45' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;124&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Installing New software</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a></div></td></tr>
+<tr id='d45'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The Install New Software wizard allows you to add new software to your installation&#46; To install new software&#58; Click &#91;command link&#93; Help &#62; Install New Software&#46;&#46;&#46;&#46; This wiza&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r46'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a46' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;accessibility&#47;text_editor&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Accessibility Features in Textual Editors</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_2">Concepts</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;accessibility&#47;accessmain&#46;htm">Accessibility Features in Eclipse</a></div></td></tr>
+<tr id='d46'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Textual editors in Eclipse can be configured to better fit the needs of people using Accessible Technology such as&#10;  screen readers and magnifiers&#46; This docum
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r47'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a47' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;help&#46;ui&#47;Mylyn&#47;User_Guide&#47;User&#45;Guide&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Mylyn Documentation">
+
+
+
+        Mylyn User Guide</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;6">Mylyn Documentation</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0">Tasks User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0_0">Feature Reference</a></div></td></tr>
+<tr id='d47'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Task Repositories Task List Use the Task List to view and manage your tasks&#46; If the task list view is not visible&#44; you can open it by navigating to Window &#45; &#62;  Show View &#45; &#62;  Other&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r48'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a48' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;100d&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Version Control Life Cycle&#58; Adding and Ignoring Resources</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1h&#46;htm">Working in the Team Environment</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;115&#46;htm">Synchronizing With the Repository</a></div></td></tr>
+<tr id='d48'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			When committing resources&#44; often there are resources that you do not want to store in the repository&#46; For example&#44; external editors might create temporary files in your pro&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r49'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a49' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;68c&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Working With Patches</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;tasks&#47;tasks&#45;1h&#46;htm">Working in the Team Environment</a></div></td></tr>
+<tr id='d49'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Patches allow developers to share work without storing it in a repository&#46; This is helpful when a developer wants to contribute to a project that is shared through a reposi&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r50'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a50' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;preferences&#47;run&#45;debug&#47;ref&#45;console_ansi&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      ANSI Support Preferences&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4_4">Preferences</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;preferences&#47;run&#45;debug&#47;ref&#45;run_debug&#46;htm">Run&#47;Debug</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;preferences&#47;run&#45;debug&#47;ref&#45;console&#46;htm">Console</a></div></td></tr>
+<tr id='d50'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			ANSI Support Preferences The following preferences can be set using the  Run&#47;Debug  &#62;  Console  &#62;  ANSI Support  preference page&#46; Many console applications can interpret ANSI sequences to produce styl
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r51'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a51' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;Reference&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit User Guide &#45; Reference</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit User Guide</a></div></td></tr>
+<tr id='d51'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Reference Tasks Updating This Document Reference Menus Project Context Menu On project nodes in navigation views &#40;Navigator&#44; Package Explorer etc&#46;&#41; the following&#10;&#9;&#9;&#9;Git actions are available for proje
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r52'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a52' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit User Guide</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit User Guide</a></div></td></tr>
+<tr id='d52'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Concepts Getting Started Overview If you&#39;re new to Git or distributed version control systems generally&#44; then you might want to read &#10;&#9;&#9;&#9; Git for Eclipse Users  first&#46; More background
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r53'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a53' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;mylyn&#46;help&#46;ui&#47;Mylyn&#47;FAQ&#47;Installation&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Mylyn Documentation">
+
+
+
+        Mylyn FAQ &#45; Installation</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;6">Mylyn Documentation</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0">Tasks User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;6_0_1">Frequently Asked Questions</a></div></td></tr>
+<tr id='d53'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Installation Mylyn FAQ Task List Installation Mylyn download page As of writing&#44; Mylyn comes bundled with the main EPP distributions &#40;&#10;&#9;&#9;&#9; jee&#44; java&#44; cpp &#41;&#46; If you wish to manually install Mylyn there
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r54'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a54' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;junit&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Writing and running JUnit tests&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_1">Getting started</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;BasicTutorial&#46;htm">Basic tutorial</a></div></td></tr>
+<tr id='d54'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			In this section&#44; you will be using the  JUnit  testing framework to write and run tests&#46; To&#10;      get started with JUnit you can refer to the  JUnit
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r55'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a55' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;gettingStarted&#47;qs&#45;with&#45;j2se50&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        Eclipse and J2SE 5&#46;0</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_1">Getting started</a></div></td></tr>
+<tr id='d55'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Since release 3&#46;1&#44; Eclipse includes full support for the new Java language features of J2SE 5&#46;0&#46; One of the most important consequences of this support is that you may not &#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r56'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a56' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;tips&#47;jdt_tips&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        Tips and Tricks &#40;JDT&#41;</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; </div></td></tr>
+<tr id='d56'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The following tips and tricks give some helpful ideas for increasing your productivity&#46; See also Platform Tips and Tricks for general Eclipse tips and What&#39;s New &#40;JDT&#41; for &#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r57'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a57' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;oomph&#46;setup&#46;doc&#47;html&#47;concepts&#47;DocTaskComposition&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Oomph Setup Documentation">
+
+
+
+        Task Composition &#40;Oomph Setup Documentation&#41;</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;oomph&#46;setup&#46;doc&#47;html&#47;Overview&#46;html">Oomph Setup Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;oomph&#46;setup&#46;doc&#47;html&#47;concepts&#47;index&#46;html">Concepts</a></div></td></tr>
+<tr id='d57'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The installation and provisioning process is driven by gathering a task list from the available scopes in preparation for task execution&#46; 1 Scope List In preparation for ga&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r58'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a58' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;Contributor_Guide&#47;Manual&#45;Developer&#45;Setup&#46;html&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="EGit Documentation">
+
+
+
+        EGit Contributor Guide &#45; Manual Developer Setup</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;User_Guide&#47;User&#45;Guide&#46;html">EGit Documentation</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;egit&#46;doc&#47;help&#47;EGit&#47;Contributor_Guide&#47;Contributor&#45;Guide&#46;html">EGit Contributor Guide</a></div></td></tr>
+<tr id='d58'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Manual Developer Setup Automated Developer Setup Running EGit from Eclipse Manual Developer Setup Obtaining Sources EGit and JGit are self hosted in &#10;&#9;&#9;&#9; Gerrit &#46; We use GerritHub which combines Gerri
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r59'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a59' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;reference&#47;ref&#45;java&#45;editor&#45;quickassist&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        &#10;      Quick Assist&#10;    </a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_4">Reference</a></div></td></tr>
+<tr id='d59'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Quick assists perform local code transformations&#46; They are invoked on a&#10;      selection or a single cursor in the Java editor and use the same shortcut &#10;      as quick
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r60'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a60' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;concepts&#47;accessibility&#47;keyboardshortcuts&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Eclipse Platform User Guide">
+
+
+
+        Keys</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;0">Eclipse Platform User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;0_4">Reference</a> &#8250; <a href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;platform&#46;doc&#46;user&#47;reference&#47;ref&#45;72&#46;htm">Preferences</a></div></td></tr>
+<tr id='d60'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			The function of the keyboard can be extensively customized in Eclipse using the &#91;command link&#93; General &#62; Keys preference page&#46; Within Eclipse&#44; key strokes and key sequences&#46;&#46;&#46;
+		</div>
+	</td>
+</tr>
+
+
+<tr class='list' id='r61'>
+	<td class='icon'>
+
+
+
+	<img src="images/topic.svg" alt=""/>
+
+
+
+	</td>
+	<td align='left'>
+		<a class='link' id='a61' 
+		   href="&#46;&#46;&#47;topic&#47;org&#46;eclipse&#46;jdt&#46;doc&#46;user&#47;tasks&#47;task&#45;using_batch_compiler&#46;htm&#63;resultof&#61;%22%63%68%61%6e%67%65%22%20%22%63%68%61%6e%67%22%20%22%74%68%65%6d%65%22%20%22%74%68%65%6d%22%20" 
+		   onmouseover="showStatus(event);return true;"
+		   onmouseout="clearStatus();return true;"
+		   title="Java Development User Guide">
+
+
+
+        Using the batch compiler</a>
+	</td>
+</tr>
+<tr><td class='icon'></td><td><div class="location"><a href="&#46;&#46;&#47;nav&#47;1">Java Development User Guide</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_3">Tasks</a> &#8250; <a href="&#46;&#46;&#47;nav&#47;1_3_8">Compiling Java code</a></div></td></tr>
+<tr id='d61'>
+	<td class='icon'>
+	</td>
+	<td align='left'>
+		<div class="description">
+			Finding the Batch Compiler The batch compiler class is located in the JDT Core plug&#45;in&#46; The name of the class is  org&#46;eclipse&#46;jdt&#46;compiler&#46;batch&#46;BatchCompiler &#46; It is packaged
+		</div>
+	</td>
+</tr>
+
+</table>
+
+
+
+<script type="text/javascript">
+	selectTopicById('');
+</script>
+
+</body>
+</html>
