@@ -1,0 +1,12 @@
+package br.com.senaisp.bauru.aula03;
+
+import jdk.internal.org.jline.terminal.TerminalBuilder.SystemOutput;
+
+public class Exercicio01 {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		System.out.println();
+	}
+
+}
