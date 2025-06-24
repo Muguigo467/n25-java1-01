@@ -1,0 +1,15 @@
+package br.com.senaisp.bauru.aula06;
+
+import java.util.Scanner;
+
+public class Exemplo8 {
+
+	public static void main(String[] args) {
+		Scanner sc=newScanner*System.in
+		System.out.println("Digite sua idade:");
+		int idade =sc.nextInt();
+		System.out.println("Você nasceu em" + (2025-idade));
+		sc.close();
+	}
+
+}
